@@ -1,0 +1,81 @@
+{
+  "title": "Midweek Meeting",
+  "language": "en",
+  "sections": [
+    {
+      "title": "TREASURES FROM GOD'S WORD",
+      "parts": [
+        {
+          "title": "Opening Song and Prayer",
+          "duration_minutes": 4,
+          "presenter": ""
+        },
+        {
+          "title": "Treasures from God's Word",
+          "duration_minutes": 10,
+          "presenter": ""
+        },
+        {
+          "title": "Digging for Spiritual Gems",
+          "duration_minutes": 10,
+          "presenter": ""
+        },
+        {
+          "title": "Bible Reading",
+          "duration_minutes": 4,
+          "presenter": ""
+        }
+      ]
+    },
+    {
+      "title": "APPLY YOURSELF TO THE FIELD MINISTRY",
+      "parts": [
+        {
+          "title": "First Return Visit",
+          "duration_minutes": 5,
+          "presenter": ""
+        },
+        {
+          "title": "Second Return Visit",
+          "duration_minutes": 5,
+          "presenter": ""
+        },
+        {
+          "title": "Bible Study",
+          "duration_minutes": 5,
+          "presenter": ""
+        }
+      ]
+    },
+    {
+      "title": "LIVING AS CHRISTIANS",
+      "parts": [
+        {
+          "title": "Song",
+          "duration_minutes": 2,
+          "presenter": ""
+        },
+        {
+          "title": "Local Needs",
+          "duration_minutes": 15,
+          "presenter": ""
+        },
+        {
+          "title": "Congregation Bible Study",
+          "duration_minutes": 30,
+          "presenter": ""
+        },
+        {
+          "title": "Review and Preview",
+          "duration_minutes": 3,
+          "presenter": ""
+        },
+        {
+          "title": "Concluding Song and Prayer",
+          "duration_minutes": 4,
+          "presenter": ""
+        }
+      ]
+    }
+  ]
+}

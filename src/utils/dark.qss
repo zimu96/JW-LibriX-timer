@@ -1,0 +1,235 @@
+/* Dark theme for OnTime Meeting Timer */
+
+/* Main Window */
+QMainWindow, QDialog {
+    background-color: #2d2d2d;
+    color: #f0f0f0;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #3d7ebd;
+    color: white;
+    border: 1px solid #2d6ebd;
+}
+
+QPushButton:hover {
+    background-color: #4d8ecd;
+    border: 1px solid #3d7ebd;
+}
+
+QPushButton:pressed {
+    background-color: #2d6ebd;
+}
+
+QPushButton:disabled {
+    background-color: #555555;
+    color: #999999;
+    border: 1px solid #444444;
+}
+
+/* Special buttons */
+QPushButton#startButton {
+    background-color: #388e3c;
+    border: 1px solid #2d7d2d;
+}
+
+QPushButton#startButton:hover {
+    background-color: #45a845;
+}
+
+QPushButton#pauseButton {
+    background-color: #f57c00;
+    border: 1px solid #e56c00;
+}
+
+QPushButton#pauseButton:hover {
+    background-color: #ff8f1f;
+}
+
+QPushButton#stopButton {
+    background-color: #d32f2f;
+    border: 1px solid #c32f2f;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #e33f3f;
+}
+
+/* Timer view */
+TimerView {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+}
+
+TimerView QLabel#timerLabel {
+    color: #f0f0f0;
+}
+
+/* Digital timer colors */
+QLabel#digitalTimerRunning {
+    color: #4caf50;  /* Green */
+}
+
+QLabel#digitalTimerWarning {
+    color: #ff9800;  /* Orange */
+}
+
+QLabel#digitalTimerDanger {
+    color: #f44336;  /* Red */
+}
+
+QLabel#digitalTimerPaused {
+    color: #2196f3;  /* Blue */
+}
+
+QLabel#digitalTimerTransition {
+    color: #bb86fc;  /* Purple */
+}
+
+/* Tool Bar */
+QToolBar {
+    background-color: #3d3d3d;
+    border-bottom: 1px solid #1d1d1d;
+}
+
+/* Status Bar */
+QStatusBar {
+    background-color: #3d3d3d;
+    color: #bbbbbb;
+    border-top: 1px solid #1d1d1d;
+}
+
+/* Status indicators */
+QLabel#overtimeLabel {
+    color: white;
+    background-color: #d32f2f;
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+QLabel#endTimeLabel {
+    color: #81c784;
+    font-weight: bold;
+}
+
+QLabel#endTimeWarningLabel {
+    color: #ef5350;
+    font-weight: bold;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: 1px solid #1d1d1d;
+    background-color: #3d3d3d;
+}
+
+QTabBar::tab {
+    background-color: #2d2d2d;
+    color: #bbbbbb;
+    border: 1px solid #1d1d1d;
+    border-bottom: none;
+}
+
+QTabBar::tab:selected {
+    background-color: #3d3d3d;
+    color: #90caf9;
+    border-bottom: 2px solid #90caf9;
+}
+
+/* Group Box */
+QGroupBox {
+    border: 1px solid #1d1d1d;
+    background-color: #3d3d3d;
+}
+
+QGroupBox::title {
+    color: #90caf9;
+    background-color: #3d3d3d;
+}
+
+/* Combo Box */
+QComboBox {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+}
+
+QComboBox:hover {
+    border: 1px solid #4d4d4d;
+}
+
+QComboBox::drop-down {
+    border-left: 1px solid #1d1d1d;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    selection-background-color: #4d4d4d;
+    selection-color: #f0f0f0;
+}
+
+/* Check Box and Radio Button */
+QCheckBox, QRadioButton {
+    color: #f0f0f0;
+}
+
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: #3d7ebd;
+    border: 1px solid #2d6ebd;
+}
+
+QCheckBox::indicator:unchecked, QRadioButton::indicator:unchecked {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+}
+
+/* Scroll Bars */
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background-color: #5d5d5d;
+}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background-color: #6d6d6d;
+}
+
+QScrollBar {
+    background-color: #3d3d3d;
+}
+
+/* Meeting parts tree */
+QTreeWidget {
+    background-color: #3d3d3d;
+    alternate-background-color: #353535;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+}
+
+QTreeWidget::item:selected {
+    background-color: #2d6ebd;
+    color: #f0f0f0;
+    border-left: 2px solid #90caf9;
+}
+
+QTreeWidget::item:hover {
+    background-color: #4d4d4d;
+}
+
+QHeaderView::section {
+    background-color: #2d2d2d;
+    color: #bbbbbb;
+    border: 1px solid #1d1d1d;
+    padding: 5px;
+}
+
+/* Line edits, spinboxes, etc. */
+QLineEdit, QSpinBox, QDoubleSpinBox, QTimeEdit {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+}
+
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QTimeEdit:focus {
+    border: 1px solid #3d7ebd;
+}

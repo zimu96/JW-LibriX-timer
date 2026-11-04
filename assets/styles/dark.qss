@@ -1,0 +1,444 @@
+/* Dark theme for JW Meeting Timer */
+
+/* Main Window */
+QMainWindow, QDialog {
+    background-color: #2d2d2d;
+    color: #f0f0f0;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #3d7ebd;
+    color: white;
+    border: 1px solid #2d6ebd;
+    border-radius: 4px;
+    padding: 6px 12px;
+    min-width: 80px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #4d8ecd;
+    border: 1px solid #3d7ebd;
+}
+
+QPushButton:pressed {
+    background-color: #2d6ebd;
+}
+
+QPushButton:disabled {
+    background-color: #555555;
+    color: #999999;
+    border: 1px solid #444444;
+}
+
+/* Special buttons */
+QPushButton#startButton {
+    background-color: #388e3c;
+    border: 1px solid #2d7d2d;
+}
+
+QPushButton#startButton:hover {
+    background-color: #45a845;
+}
+
+QPushButton#pauseButton {
+    background-color: #f57c00;
+    border: 1px solid #e56c00;
+}
+
+QPushButton#pauseButton:hover {
+    background-color: #ff8f1f;
+}
+
+QPushButton#stopButton {
+    background-color: #d32f2f;
+    border: 1px solid #c32f2f;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #e33f3f;
+}
+
+/* Timer view */
+TimerView {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    border-radius: 8px;
+    margin: 5px;
+}
+
+TimerView QLabel#timerLabel {
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
+TimerView QLabel#part_label {
+    color: #f0f0f0;
+    font-weight: bold;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+/* Digital timer colors */
+QLabel#digitalTimerRunning {
+    color: #4caf50;  /* Green */
+    font-weight: bold;
+}
+
+QLabel#digitalTimerWarning {
+    color: #ff9800;  /* Orange */
+    font-weight: bold;
+}
+
+QLabel#digitalTimerDanger {
+    color: #f44336;  /* Red */
+    font-weight: bold;
+}
+
+QLabel#digitalTimerPaused {
+    color: #2196f3;  /* Blue */
+    font-weight: bold;
+}
+
+QLabel#digitalTimerTransition {
+    color: #bb86fc;  /* Purple */
+    font-weight: bold;
+}
+
+QLabel#digitalTimerStopped {
+    color: #f0f0f0;  /* Light gray */
+    font-weight: bold;
+}
+
+/* Tool Bar */
+QToolBar {
+    background-color: #3d3d3d;
+    border-bottom: 1px solid #1d1d1d;
+    spacing: 6px;
+    padding: 3px;
+}
+
+QToolBar QPushButton {
+    min-width: 100px;
+}
+
+/* Status Bar */
+QStatusBar {
+    background-color: #3d3d3d;
+    color: #bbbbbb;
+    border-top: 1px solid #1d1d1d;
+    min-height: 25px;
+}
+
+QStatusBar QLabel {
+    padding: 2px 5px;
+    margin-right: 5px;
+}
+
+/* Status indicators */
+QLabel#overtimeLabel {
+    color: white;
+    background-color: #d32f2f;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-weight: bold;
+    border: 1px solid #c32f2f;
+}
+
+QLabel#endTimeLabel {
+    color: white;
+    background-color: #388e3c;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+QLabel#endTimeWarningLabel {
+    color: white;
+    background-color: #d32f2f;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: 1px solid #1d1d1d;
+    background-color: #3d3d3d;
+    border-radius: 4px;
+}
+
+QTabBar::tab {
+    background-color: #2d2d2d;
+    color: #bbbbbb;
+    border: 1px solid #1d1d1d;
+    border-bottom: none;
+    padding: 8px 16px;
+    min-width: 100px;
+    font-weight: bold;
+}
+
+QTabBar::tab:selected {
+    background-color: #3d3d3d;
+    color: #90caf9;
+    border-bottom: 2px solid #90caf9;
+}
+
+/* Group Box */
+QGroupBox {
+    border: 1px solid #1d1d1d;
+    background-color: #3d3d3d;
+    border-radius: 6px;
+    margin-top: 12px;
+    padding-top: 15px;
+}
+
+QGroupBox::title {
+    color: #90caf9;
+    background-color: #3d3d3d;
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    left: 10px;
+    font-weight: bold;
+}
+
+/* Combo Box */
+QComboBox {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+    border-radius: 4px;
+    padding: 5px 10px;
+    min-width: 100px;
+}
+
+QComboBox:hover {
+    border: 1px solid #4d4d4d;
+}
+
+QComboBox::drop-down {
+    border-left: 1px solid #1d1d1d;
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 20px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    selection-background-color: #4d4d4d;
+    selection-color: #f0f0f0;
+}
+
+/* Check Box and Radio Button */
+QCheckBox, QRadioButton {
+    color: #f0f0f0;
+    spacing: 8px;
+    padding: 4px;
+}
+
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: #3d7ebd;
+    border: 1px solid #2d6ebd;
+    width: 16px;
+    height: 16px;
+}
+
+QCheckBox::indicator:unchecked, QRadioButton::indicator:unchecked {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    width: 16px;
+    height: 16px;
+}
+
+/* Scroll Bars */
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background-color: #5d5d5d;
+    min-height: 30px;
+    min-width: 30px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background-color: #6d6d6d;
+}
+
+QScrollBar:vertical {
+    background-color: #3d3d3d;
+    border: none;
+    width: 10px;
+    margin: 10px 0 10px 0;
+    border-radius: 5px;
+}
+
+QScrollBar:horizontal {
+    background-color: #3d3d3d;
+    border: none;
+    height: 10px;
+    margin: 0 10px 0 10px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    height: 0px;
+    width: 0px;
+}
+
+/* Meeting parts tree */
+QTreeWidget {
+    background-color: #3d3d3d;
+    alternate-background-color: #353535;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+}
+
+QTreeWidget::item {
+    min-height: 28px;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+QTreeWidget::item:selected {
+    background-color: #2d6ebd;
+    color: #f0f0f0;
+    border-left: 2px solid #90caf9;
+}
+
+QTreeWidget::item:hover {
+    background-color: #4d4d4d;
+}
+
+QHeaderView::section {
+    background-color: #2d2d2d;
+    color: #bbbbbb;
+    border: 1px solid #1d1d1d;
+    padding: 5px;
+    font-weight: bold;
+}
+
+/* SpinBox, LineEdit, TimeEdit */
+QSpinBox, QDoubleSpinBox, QLineEdit, QTimeEdit {
+    background-color: #3d3d3d;
+    border: 1px solid #1d1d1d;
+    color: #f0f0f0;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+QSpinBox:focus, QDoubleSpinBox:focus, QLineEdit:focus, QTimeEdit:focus {
+    border: 1px solid #3d7ebd;
+}
+
+/* Secondary Display Specific Styles */
+/* This will ensure visibility in the speaker view */
+SecondaryDisplay {
+    background-color: black;
+    color: white;
+}
+
+SecondaryDisplay QLabel {
+    color: white;
+    font-weight: bold;
+}
+
+SecondaryDisplay TimerView {
+    background-color: black;
+    border: 2px solid #333333;
+}
+
+SecondaryDisplay TimerView QLabel#timerLabel {
+    color: white;
+    font-weight: bold;
+}
+
+/* Menus */
+QMenu {
+    background-color: #3d3d3d;
+    color: #f0f0f0;
+    border: 1px solid #1d1d1d;
+}
+
+QMenu::item {
+    padding: 5px 30px 5px 20px;
+    border: 1px solid transparent;
+}
+
+QMenu::item:selected {
+    background-color: #4d4d4d;
+    color: #90caf9;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #1d1d1d;
+    margin: 4px 0px;
+}
+
+/* Menu Bar */
+QMenuBar {
+    background-color: #3d3d3d;
+    color: #f0f0f0;
+    border-bottom: 1px solid #1d1d1d;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 6px 10px;
+}
+
+QMenuBar::item:selected {
+    background-color: #4d4d4d;
+    color: #90caf9;
+}
+
+QMenuBar::item:pressed {
+    background-color: #2d6ebd;
+    color: #f0f0f0;
+}
+/* QMessageBox styling override */
+QMessageBox {
+    background-color: #2d2d2d;
+    color: #f0f0f0;
+    border: 1px solid #1d1d1d;
+    font-weight: normal;
+}
+
+QMessageBox QLabel {
+    color: #f0f0f0;
+    font-weight: normal;
+}
+
+QMessageBox QPushButton {
+    background-color: #4a90e2;
+    color: white;
+    border: 1px solid #3a80d2;
+    border-radius: 4px;
+    padding: 6px 12px;
+    min-width: 80px;
+    font-weight: bold;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #5aa0f2;
+}
+
+QMessageBox QPushButton:pressed {
+    background-color: #357ab8;
+}
+
+QMessageBox QPushButton:disabled {
+    background-color: #555555;
+    color: #999999;
+    border: 1px solid #444444;
+}
+
+/* Global font color override for dark mode */
+QLabel, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTimeEdit,
+QCheckBox, QRadioButton, QGroupBox::title, QTabBar::tab, QTreeWidget,
+QHeaderView::section, QStatusBar QLabel, QMessageBox QLabel {
+    color: #f0f0f0;
+    font-weight: normal;
+}

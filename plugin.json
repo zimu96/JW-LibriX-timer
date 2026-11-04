@@ -1,0 +1,7 @@
+{
+  "nome": "timer",
+  "titolo": "Timer adunanze",
+  "versione": "1.0.0",
+  "entrata": "plugin.py",
+  "basato_su": "OnTime Meeting Timer 1.0.9 (MIT)"
+}

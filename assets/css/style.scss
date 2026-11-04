@@ -1,0 +1,67 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* ── Headings: blue to match app palette ───────────────────────────────── */
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4,
+.main-content h5,
+.main-content h6 {
+  color: #1565C0;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.main-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.25em 0 1.75em;
+  font-size: 0.95em;
+  border: 1px solid #dce3ed;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.main-content table th {
+  background-color: #1565C0;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 10px 16px;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.main-content table td {
+  padding: 9px 16px;
+  border-top: 1px solid #e8edf4;
+  color: #333;
+}
+
+.main-content table tr:nth-child(even) td {
+  background-color: #f4f7fb;
+}
+
+.main-content table tr:hover td {
+  background-color: #eaf0fb;
+}
+
+/* ── Keyboard key badges ─────────────────────────────────────────────────── */
+kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #1a2b45;
+  background-color: #f6f8fa;
+  border: 1px solid #c6cdd6;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  box-shadow: inset 0 -1px 0 #b0b8c4;
+  white-space: nowrap;
+  vertical-align: middle;
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="/manifest.json">
+<title>Timer adunanza</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body, :fullscreen, ::backdrop { background: #000 !important; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    color: #fff; font-family: system-ui, "Segoe UI", Roboto, sans-serif; font-weight: bold;
+    display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+    text-align: center; padding: 5vh 4vw 3vh; box-sizing: border-box; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #parte  { color: #a77fd4; font-size: min(7vh, 6vw); line-height: 1.15; max-width: 100%; }
+  /* come nel monitor del PC: parte in alto, cifre al centro che occupano lo spazio, testi in basso */
+  #timer  { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%;
+            font-size: min(36vh, 17vw); line-height: 1; margin: 1vh 0; white-space: nowrap;
+            font-variant-numeric: tabular-nums; }
+  #timer.corto { font-size: min(36vh, 28vw); }
+  #info1  { font-size: min(5.5vh, 5vw); line-height: 1.2; max-width: 100%; }
+  #info2  { color: #a77fd4; font-size: min(5vh, 5vw); }
+  #parte:empty, #info1:empty, #info2:empty { display: none; }
+  .verde { color: #4ade80; } .arancio { color: #fbbf24; } .rosso { color: #f87171; }
+  .blu { color: #60a5fa; } .viola { color: #c4a1ff; } .bianco { color: #fff; }
+  #punto { position: fixed; top: 10px; right: 10px; width: 10px; height: 10px; border-radius: 50%;
+           background: #f87171; opacity: .7; }
+  #punto.ok { background: #4ade80; opacity: .25; }
+  #schermo { position: fixed; top: 6px; left: 0; right: 0; font-size: 12px; pointer-events: none; color: #777;
+             font-weight: normal; transition: opacity .6s; }
+</style>
+</head>
+<body>
+  <div id="punto"></div>
+  <div id="parte"></div>
+  <div id="timer" class="bianco">--:--:--</div>
+  <div id="info1"></div>
+  <div id="info2"></div>
+  <div id="schermo">Tocca lo schermo per il tutto schermo</div>
+<script>
+  const $ = id => document.getElementById(id);
+  let ultimo = null, socket;
+
+  // ---- schermo intero -------------------------------------------------
+  const el = document.documentElement;
+  const intero = () => document.fullscreenElement || document.webkitFullscreenElement;
+  function alterna() {
+    if (intero()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    const f = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (f) f.call(el).catch(() => {});
+    try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
+  }
+  document.addEventListener('click', alterna);
+  function suggerimento() { $('schermo').style.opacity = intero() ? 0 : 1; }
+  document.addEventListener('fullscreenchange', suggerimento);
+  document.addEventListener('webkitfullscreenchange', suggerimento);
+
+  // ---- testi come nel monitor del timer -------------------------------
+  function italiano(t) {
+    return (t || '')
+      .replace(/^\s*meeting starts now!?\s*$/i, "L'adunanza inizia ora!")
+      .replace(/^\s*meeting starts in\s*/i, "L'adunanza inizia tra ")
+      .replace(/^\s*next part\s*:\s*/i, 'Prossima parte: ')
+      .replace(/^\s*last part\s*$/i, 'Ultima parte')
+      .replace(/^\s*meeting (ended|completed)\s*$/i, 'Adunanza terminata');
+  }
+  function data() {
+    const s = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    return s;
+  }
+
+  function disegna() {
+    const d = ultimo; if (!d) return;
+    let parte = '', info1 = '', info2 = '', colore = 'bianco', cifre = d.time;
+    if (d.state === 'stopped') {
+      cifre = d.time;               // l'ora del PC, non quella del tablet: i secondi coincidono
+      if (d.meetingEnded) info1 = 'Adunanza terminata';
+      else if (d.countdownMessage) info1 = italiano(d.countdownMessage);
+      info2 = data();
+    } else {
+      parte = d.part || '';
+      if (d.state === 'transition') colore = 'viola';
+      else {
+        info1 = d.nextPart ? 'Prossima parte: ' + d.nextPart : 'Ultima parte';
+        colore = {running: 'verde', warning: 'arancio', danger: 'rosso', paused: 'blu'}[d.state] || 'verde';
+      }
+    }
+    const t = $('timer');
+    t.textContent = cifre;
+    t.className = colore + (cifre.length <= 6 ? ' corto' : '');
+    $('parte').textContent = parte;
+    $('info1').textContent = info1;
+    $('info1').className = d.state === 'stopped' && d.countdownMessage ? 'blu' : '';
+    $('info2').textContent = info2;
+  }
+
+  function connetti() {
+    socket = new WebSocket(`ws://${location.host}/ws`);
+    socket.onopen = () => $('punto').className = 'ok';
+    socket.onclose = () => { $('punto').className = ''; setTimeout(connetti, 2000); };
+    socket.onmessage = e => { try { ultimo = JSON.parse(e.data); disegna(); } catch (x) {} };
+  }
+  suggerimento();
+  connetti();
+</script>
+</body>
+</html>

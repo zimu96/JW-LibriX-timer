@@ -1,0 +1,26 @@
+{
+  "title": "Custom Meeting",
+  "language": "en",
+  "sections": [
+    {
+      "title": "Main Section",
+      "parts": [
+        {
+          "title": "Opening",
+          "duration_minutes": 5,
+          "presenter": ""
+        },
+        {
+          "title": "Main Part",
+          "duration_minutes": 30,
+          "presenter": ""
+        },
+        {
+          "title": "Closing",
+          "duration_minutes": 5,
+          "presenter": ""
+        }
+      ]
+    }
+  ]
+}

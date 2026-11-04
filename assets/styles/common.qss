@@ -1,0 +1,159 @@
+/* Common styles for all themes */
+
+/* General UI */
+QMainWindow, QDialog {
+    font-family: 'Courier New', 'Arial', sans-serif;
+    font-size: 10pt;
+}
+
+/* Buttons */
+QPushButton {
+    padding: 6px 12px;
+    border-radius: 4px;
+    min-width: 80px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    border-width: 2px;
+}
+
+QPushButton:pressed {
+    padding: 8px 14px;
+}
+
+QPushButton:disabled {
+    opacity: 0.6;
+}
+
+/* Toolbar */
+QToolBar {
+    spacing: 6px;
+    padding: 3px;
+}
+
+QToolBar QPushButton {
+    min-width: 60px;
+}
+
+/* Frames */
+QFrame {
+    border-radius: 4px;
+}
+
+/* Tab Widgets */
+QTabWidget::pane {
+    border-radius: 4px;
+    padding: 5px;
+}
+
+QTabBar::tab {
+    padding: 8px 16px;
+    min-width: 100px;
+    font-weight: bold;
+}
+
+QTabBar::tab:selected {
+    border-bottom-width: 2px;
+}
+
+/* Group Boxes */
+QGroupBox {
+    font-weight: bold;
+    border-radius: 6px;
+    margin-top: 12px;
+    padding-top: 15px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    left: 10px;
+}
+
+/* Combo Boxes */
+QComboBox {
+    padding: 5px 10px;
+    border-radius: 4px;
+    min-width: 100px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 20px;
+    border-left-width: 1px;
+}
+
+/* Spinboxes and Line edits */
+QSpinBox, QDoubleSpinBox, QLineEdit, QTimeEdit {
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* Check boxes and Radio buttons */
+QCheckBox, QRadioButton {
+    spacing: 8px;
+    padding: 4px;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+/* Status Bar */
+QStatusBar {
+    padding: 3px;
+}
+
+QStatusBar QLabel {
+    margin-right: 5px;
+    padding: 2px 5px;
+}
+
+/* Timer specific */
+QLabel#timerLabel {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+/* Special styling for timer view */
+TimerView QLabel {
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* Scrollbars */
+QScrollBar:vertical {
+    border: none;
+    width: 10px;
+    margin: 10px 0 10px 0;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 30px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    height: 10px;
+    margin: 0 10px 0 10px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:horizontal {
+    min-width: 30px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}

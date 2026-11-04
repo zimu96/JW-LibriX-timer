@@ -1,0 +1,41 @@
+{
+  "title": "Weekend Meeting",
+  "language": "en",
+  "sections": [
+    {
+      "title": "Public Talk",
+      "parts": [
+        {
+          "title": "Opening Song and Prayer",
+          "duration_minutes": 5,
+          "presenter": ""
+        },
+        {
+          "title": "Public Talk",
+          "duration_minutes": 30,
+          "presenter": ""
+        }
+      ]
+    },
+    {
+      "title": "Watchtower Study",
+      "parts": [
+        {
+          "title": "Song",
+          "duration_minutes": 5,
+          "presenter": ""
+        },
+        {
+          "title": "Watchtower Study",
+          "duration_minutes": 60,
+          "presenter": ""
+        },
+        {
+          "title": "Concluding Song and Prayer",
+          "duration_minutes": 5,
+          "presenter": ""
+        }
+      ]
+    }
+  ]
+}
