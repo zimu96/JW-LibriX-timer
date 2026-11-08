@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
 
         # Setup UI
         self.setWindowTitle("OnTime Meeting Timer")
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(400, 300)
         
         # Apply minimal styling immediately
         self._apply_minimal_styling()
@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
         self._create_status_bar()
 
         # Initialize toast notification manager for in-app notifications
-        self.toast_manager = ToastManager(self.centralWidget())
+        self.toast_manager = ToastManager(self)
         
         # Connect signals
         self._connect_signals()
@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
         self.reminder_controller.remind_to_advance.connect(self._nudge_advance)
 
     def _restore_window_size(self):
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(400, 300)
         self.resize(600, 400)
         
     def _apply_minimal_styling(self):
@@ -1907,7 +1907,7 @@ class MainWindow(QMainWindow):
         """Handle duration redistribution — show toast notification"""
         count = len(adjusted_parts)
         target = getattr(self.timer_controller, '_predicted_end_time', None)
-        time_str = target.strftime("%I:%M %p") if target else "?"
+        time_str = target.strftime("%H:%M") if target else "?"
         self._show_toast_notification(
             self.tr("Schedule Updated"),
             self.tr("%n part(s) redistributed — meeting now ends at", "", count)

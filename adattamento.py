@@ -12,8 +12,9 @@ riserva per i testi che il timer originale non traduce.
 """
 import re
 
-from PyQt6.QtCore import QEvent, QObject, QTranslator, Qt
-from PyQt6.QtWidgets import QApplication, QComboBox, QDialog, QFileDialog, QGroupBox, QLabel
+from PyQt6.QtCore import QEvent, QObject, QTimer, QTranslator, Qt
+from PyQt6.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog, QGroupBox, QLabel,
+                             QWidget)
 
 _applicato = False
 
@@ -75,6 +76,10 @@ DIZIONARIO = {
     "Enter them now?": "Vuoi inserirli adesso?",
     "Edit Now": "Inserisci adesso", "Skip": "Dopo",
     "End Meeting?": "Terminare l'adunanza?",
+    "%n part(s) redistributed — meeting now ends at": "Durate di %n parte/i ridistribuite: l'adunanza ora finisce alle",
+    "%n part(s)": "%n parte/i",
+    "😅 Hold up! Are you sure you want to stop the meeting?\nThis will end the timer and reset the session.":
+        "Aspetta! Vuoi davvero terminare l'adunanza?\nIl timer si fermerà e la sessione verrà azzerata.",
     "Template:": "Modello:",
     "Presenter": "Relatore",
     "Presenter:": "Relatore:",
@@ -90,6 +95,9 @@ MODELLI = (
     (r"^Next Part:\s*(.*)$", r"Prossima parte: \1"),
     (r"^Current Part:\s*(.*)$", r"Parte attuale: \1"),
     (r"^Last Part$", "Ultima parte"),
+    (r"^Meeting Overtime:\s*(.*)$", r"Ritardo: \1"),
+    (r"^Parts in section:\s*(.*)$", r"Parti della sezione: \1"),
+    (r"^Total:\s*(\d+) min$", r"Totale: \1 min"),
     (r"^Meeting Ended$", "Adunanza terminata"),
     (r"^Midweek Meeting:\s*(.*)$", r"Adunanza infrasettimanale: \1"),
     (r"^Weekend Meeting:\s*(.*)$", r"Adunanza del fine settimana: \1"),
@@ -677,17 +685,49 @@ def _avviso_visita_all_apertura(finestra) -> None:
             "del sorvegliante al posto dello studio biblico.", icon="toast-info"), 1500)
 
 
+_TASTI_ITALIANI = (
+    ("Ok", "OK"), ("Cancel", "Annulla"), ("Yes", "Sì"), ("No", "No"),
+    ("Apply", "Applica"), ("Reset", "Ripristina"), ("Close", "Chiudi"),
+    ("Save", "Salva"), ("Discard", "Scarta"), ("Open", "Apri"),
+    ("Retry", "Riprova"), ("Ignore", "Ignora"), ("Abort", "Interrompi"),
+    ("YesToAll", "Sì a tutti"), ("NoToAll", "No a tutti"), ("Help", "Aiuto"),
+    ("RestoreDefaults", "Ripristina"), ("SaveAll", "Salva tutto"),
+)
+
+
+def tasti_in_italiano(d) -> None:
+    """Sì / No / Annulla ... al posto di Yes / No / Cancel in ogni pop-up del timer."""
+    from PyQt6.QtWidgets import QDialogButtonBox, QMessageBox
+    scatole = d.findChildren(QDialogButtonBox)
+    for nome, testo in _TASTI_ITALIANI:
+        for scatola in scatole:
+            tasto = scatola.button(getattr(QDialogButtonBox.StandardButton, nome))
+            if tasto is not None and tasto.text().replace("&", "") != testo:
+                tasto.setText(testo)
+    if isinstance(d, QMessageBox):
+        for nome, testo in _TASTI_ITALIANI:
+            tasto = d.button(getattr(QMessageBox.StandardButton, nome, None))
+            if tasto is not None and tasto.text().replace("&", "") != testo:
+                tasto.setText(testo)
+
+
 class _DialoghiSenzaBordi(QObject):
     """I pop-up del timer sono parte dell'app: niente cornice del sistema.
 
     Si interviene al momento della «rifinitura» (Polish), prima che la
     finestra venga creata, cosi' non c'e' sfarfallio.  Servono una testata
     col titolo (la barra del titolo non c'e' piu') e un bordo viola.
+
+    I pop-up che ci stanno diventano parte della finestra dell'app (non
+    finestre a parte): stanno al centro dell'app, qualunque sia la sua
+    grandezza, e non finiscono mai sotto un'altra finestra (Zoom).  Sotto di
+    loro un velo scuro blocca i clic sul resto del timer.
     """
 
     def __init__(self, finestra) -> None:
         super().__init__(finestra)
         self._finestra = finestra
+        self._veli: dict = {}
 
     def _del_timer(self, w) -> bool:
         p = w.parentWidget()
@@ -698,16 +738,88 @@ class _DialoghiSenzaBordi(QObject):
         return False
 
     def eventFilter(self, oggetto, evento) -> bool:  # noqa: N802
-        if (evento.type() == QEvent.Type.Polish and isinstance(oggetto, QDialog)
+        tipo = evento.type()
+        if (tipo == QEvent.Type.Polish and isinstance(oggetto, QDialog)
                 and not isinstance(oggetto, QFileDialog)
                 and oggetto.isWindow() and not oggetto.property("senza_bordi")
                 and self._del_timer(oggetto)):
             oggetto.setProperty("senza_bordi", True)
             try:
                 self._prepara(oggetto)
+                tasti_in_italiano(oggetto)
+                self._incorpora(oggetto)
             except Exception:  # noqa: BLE001 - un pop-up con la cornice e' meglio di nessun pop-up
                 pass
+        elif tipo == QEvent.Type.Show and isinstance(oggetto, QDialog) \
+                and oggetto.property("incorporato"):
+            QTimer.singleShot(0, lambda d=oggetto: self._metti_al_centro(d))
+            self._metti_al_centro(oggetto)
+        elif tipo == QEvent.Type.Hide and isinstance(oggetto, QDialog) \
+                and oggetto.property("incorporato"):
+            self._togli_velo(oggetto)
+        elif tipo == QEvent.Type.Resize and isinstance(oggetto, QWidget) \
+                and oggetto is self._finestra and self._veli:
+            for d in list(self._veli):
+                try:
+                    self._metti_al_centro(d)
+                except RuntimeError:
+                    self._veli.pop(d, None)
         return False
+
+    # -- dentro la finestra dell'app -------------------------------------
+    def _incorpora(self, d) -> None:
+        """Il pop-up diventa un pezzo della finestra, se ci sta dentro."""
+        f = self._finestra
+        if not f.isVisible():
+            return                      # il timer non si vede: il pop-up resta una finestra, visibile
+        d.adjustSize()
+        minimo = d.minimumSizeHint()
+        massimo = f.size()
+        if (minimo.width() > massimo.width() - 24 or minimo.height() > massimo.height() - 24
+                or d.layout() is None):
+            return                      # troppo grande: resta una finestra a parte
+        d.setParent(f, Qt.WindowType.Widget)     # da finestra a widget interno
+        d.setProperty("incorporato", True)
+        d.setAutoFillBackground(True)
+        d.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+    def _metti_al_centro(self, d) -> None:
+        f = self._finestra
+        if not d.isVisible() or d.parentWidget() is not f:
+            return
+        self._velo_per(d).setGeometry(f.rect())
+        self._velo_per(d).raise_()
+        m = 12
+        larg = min(max(d.sizeHint().width(), d.minimumSizeHint().width(), d.width()),
+                   f.width() - 2 * m)
+        alt = min(max(d.sizeHint().height(), d.minimumSizeHint().height(), d.height()),
+                  f.height() - 2 * m)
+        if (d.width(), d.height()) != (larg, alt):
+            d.resize(larg, alt)
+        finestra_app = f.window()
+        centro = f.mapFromGlobal(finestra_app.mapToGlobal(finestra_app.rect().center()))
+        x = max(m, min(centro.x() - d.width() // 2, f.width() - d.width() - m))
+        y = max(m, min(centro.y() - d.height() // 2, f.height() - d.height() - m))
+        d.move(x, y)
+        d.raise_()
+        if not d.property("fuoco_dato"):
+            d.setProperty("fuoco_dato", True)
+            d.setFocus(Qt.FocusReason.PopupFocusReason)    # Invio / Esc funzionano subito
+
+    def _velo_per(self, d):
+        velo = self._veli.get(d)
+        if velo is None:
+            velo = _Velo(self._finestra)
+            self._veli[d] = velo
+            velo.show()
+            velo.raise_()
+        return velo
+
+    def _togli_velo(self, d) -> None:
+        velo = self._veli.pop(d, None)
+        if velo is not None:
+            velo.hide()
+            velo.deleteLater()
 
     @staticmethod
     def _prepara(d) -> None:
@@ -740,6 +852,33 @@ class _DialoghiSenzaBordi(QObject):
             testata.setStyleSheet(stile_testata)
             d.layout().setContentsMargins(0, 0, 0, d.layout().contentsMargins().bottom())
             d.layout().insertWidget(0, testata)
+
+
+class _Velo(QWidget):
+    """Il velo scuro dietro un pop-up: inghiotte i clic, cosi' il resto non si tocca."""
+
+    def __init__(self, genitore) -> None:
+        super().__init__(genitore)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        self.setAutoFillBackground(False)
+
+    def paintEvent(self, evento) -> None:  # noqa: N802
+        from PyQt6.QtGui import QColor, QPainter
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(0, 0, 0, 110))
+        p.end()
+
+    def mousePressEvent(self, evento) -> None:  # noqa: N802
+        evento.accept()
+
+    def mouseReleaseEvent(self, evento) -> None:  # noqa: N802
+        evento.accept()
+
+    def mouseDoubleClickEvent(self, evento) -> None:  # noqa: N802
+        evento.accept()
+
+    def wheelEvent(self, evento) -> None:  # noqa: N802
+        evento.accept()
 
 
 def dialoghi_senza_bordi(finestra) -> None:
@@ -789,6 +928,13 @@ def applica() -> None:
             except Exception:  # noqa: BLE001
                 pass
         scelta_originale(self, meeting)
+        # Il timer deve usare l'adunanza scelta: prima, scegliendo dall'elenco,
+        # il timer restava sull'adunanza di prima e le parti non corrispondevano
+        # piu' a quelle mostrate (e ai contenuti).  A timer fermo soltanto.
+        if meeting and self.timer_controller.current_part_index < 0:
+            scelta_corrente = self.meeting_controller.current_meeting or meeting
+            if self.timer_controller.current_meeting is not scelta_corrente:
+                self.timer_controller.set_meeting(scelta_corrente)
         if meeting and getattr(self, "contenuti", None) is not None:
             self.contenuti.imposta_adunanza(meeting)
 
@@ -965,3 +1111,6 @@ def applica() -> None:
             monitor_timer.installa_comandi(self)
 
     mw.SecondaryDisplay = MonitorConComandi
+
+    import correzioni
+    correzioni.applica()

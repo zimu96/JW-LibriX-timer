@@ -61,8 +61,11 @@ class MeetingEditorDialog(QDialog):
         # Type
         self.type_combo = QComboBox()
         for meeting_type in MeetingType:
-            self.type_combo.addItem(meeting_type.value.capitalize(), meeting_type.value)
-        details_layout.addRow("Type:", self.type_combo)
+            self.type_combo.addItem({"midweek": "Infrasettimanale", "weekend": "Fine settimana",
+                                     "custom": "Personalizzata"}.get(meeting_type.value,
+                                                                     meeting_type.value.capitalize()),
+                                    meeting_type.value)
+        details_layout.addRow("Tipo:", self.type_combo)
         
         # Connect type change to update template options
         self.type_combo.currentIndexChanged.connect(self._update_template_options)
@@ -676,7 +679,7 @@ class MeetingEditorDialog(QDialog):
 
         if diff > 5:
             # Under target (good)
-            self.target_comparison_label.setText(f"✓ {diff} min under")
+            self.target_comparison_label.setText(f"✓ {diff} min in meno")
             self.target_comparison_label.setStyleSheet("color: #4CAF50; font-size: 9pt;")
         elif diff >= 0:
             # Near target (acceptable)
@@ -684,7 +687,7 @@ class MeetingEditorDialog(QDialog):
             self.target_comparison_label.setStyleSheet("color: #FF9800; font-size: 9pt;")
         else:
             # Over target (warning)
-            self.target_comparison_label.setText(f"⚠ {abs(diff)} min over")
+            self.target_comparison_label.setText(f"⚠ {abs(diff)} min in più")
             self.target_comparison_label.setStyleSheet("color: #F44336; font-size: 9pt;")
 
     def _update_target_duration_default(self):

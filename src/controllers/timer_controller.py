@@ -38,6 +38,7 @@ class TimerController(QObject):
     meeting_countdown_updated = pyqtSignal(int, str)  # seconds remaining, formatted message
     durations_redistributed = pyqtSignal(list)  # [(global_idx, old_min, new_min), ...]
     durations_reset = pyqtSignal()
+    late_start_absorbed = pyqtSignal(int, int)  # secondi di ritardo, secondi tolti alle parti
     
     def __init__(self, settings_controller: SettingsController):
         """Initialize the TimerController with a settings controller"""
@@ -72,6 +73,7 @@ class TimerController(QObject):
         self._predicted_end_time = None
         self._target_end_time = None  # Based on organizational standard or custom meeting target
         self._remaining_parts_duration = 0
+        self._inizio_programmato = None  # ora dell'adunanza di oggi, se si e' partiti in ritardo
         
         # Meeting countdown tracking
         self._countdown_timer = QTimer(self)
@@ -202,16 +204,29 @@ class TimerController(QObject):
         # Reset all parts completion status
         for part in self.parts_list:
             part.is_completed = False
+            part.riduzione_secondi = 0
         
         # Move to first part
         self.current_part_index = 0
-        current_part = self.parts_list[self.current_part_index]
         
         # Reset overtime tracking
         self._total_overtime_seconds = 0
         
         # Record meeting start time and calculate original and target end times
         self._meeting_start_time = datetime.now()
+
+        # Se si parte dopo l'ora dell'adunanza, il ritardo si toglie dalle parti
+        # (non da cantici e preghiere) a pochi secondi per volta.
+        self._inizio_programmato = self._scheduled_start_today()
+        ritardo = 0
+        if self._inizio_programmato is not None:
+            ritardo = int((self._meeting_start_time - self._inizio_programmato).total_seconds())
+            if not 1 <= ritardo <= 3 * 3600:
+                ritardo = 0
+                self._inizio_programmato = None
+        tolti = self._spalma_ritardo(ritardo) if ritardo else 0
+
+        current_part = self.parts_list[self.current_part_index]
         self._calculate_original_end_time()  # Template-based
         self._calculate_target_end_time()    # Standard-based or custom
         self._predicted_end_time = self._original_end_time
@@ -227,11 +242,67 @@ class TimerController(QObject):
         self.part_changed.emit(current_part, self.current_part_index)
         self.meeting_started.emit()
         self.predicted_end_time_updated.emit(self._original_end_time, self._predicted_end_time, self._target_end_time)
+        if ritardo:
+            self.late_start_absorbed.emit(ritardo, tolti)
 
         # Start session tracking for crash recovery
         meeting_file = f"{self.current_meeting.meeting_type.value}_{self.current_meeting.date.strftime('%Y-%m-%d')}_{self.current_meeting.language}.json"
         self.session_manager.start_session(self.current_meeting, meeting_file)
     
+    def _scheduled_start_today(self) -> Optional[datetime]:
+        """L'ora in cui l'adunanza doveva iniziare OGGI, o None se oggi non e' il suo giorno."""
+        if not self.current_meeting:
+            return None
+        settings = self.settings_controller.get_settings()
+        if self.current_meeting.meeting_type == MeetingType.MIDWEEK:
+            giorno = (1 if self.settings_controller.is_co_visit_active()
+                      else settings.midweek_meeting.day.value)
+            ora = settings.midweek_meeting.time
+        elif self.current_meeting.meeting_type == MeetingType.WEEKEND:
+            giorno = settings.weekend_meeting.day.value
+            ora = settings.weekend_meeting.time
+        else:
+            return None
+        adesso = datetime.now()
+        if adesso.weekday() != giorno:
+            return None
+        return datetime.combine(adesso.date(), ora)
+
+    @staticmethod
+    def _e_cantico_o_preghiera(titolo: str) -> bool:
+        """Cantici e preghiere non si accorciano mai."""
+        import re
+        return re.search(r"\b(cantic[oi]|canti?|song|cantique|lied|canci[oó]n|cantiga|"
+                         r"preghier[ae]|prayer|pri[eè]re|gebet|oraci[oó]n|ora[cç][aã]o)\b",
+                         titolo or "", re.IGNORECASE) is not None
+
+    def _spalma_ritardo(self, ritardo: int) -> int:
+        """Toglie `ritardo` secondi alle parti che si possono accorciare, a parti uguali.
+
+        Ogni parte resta di almeno un minuto.  Ritorna i secondi davvero tolti
+        (meno del ritardo se le parti non ne hanno abbastanza).
+        """
+        parti = [p for p in self.parts_list if not self._e_cantico_o_preghiera(p.title)]
+        capacita = [max(0, p.duration_minutes * 60 - 60) for p in parti]
+        tolti = [0] * len(parti)
+        resto = ritardo
+        while resto > 0:
+            attive = [i for i in range(len(parti)) if tolti[i] < capacita[i]]
+            if not attive:
+                break
+            base, extra = divmod(resto, len(attive))
+            dati = 0
+            for k, i in enumerate(attive):
+                q = min(base + (1 if k < extra else 0), capacita[i] - tolti[i])
+                tolti[i] += q
+                dati += q
+            if dati == 0:
+                break
+            resto -= dati
+        for p, t in zip(parti, tolti):
+            p.riduzione_secondi = t
+        return ritardo - resto
+
     def _calculate_original_end_time(self):
         """Calculate the original end time based on scheduled parts"""
         if not self.current_meeting:
@@ -265,8 +336,9 @@ class TimerController(QObject):
             else:  # MIDWEEK or any other type defaults to midweek
                 target_minutes = settings.midweek_meeting.target_duration_minutes
 
-        # Calculate target end time
-        self._target_end_time = self._meeting_start_time + timedelta(minutes=target_minutes)
+        # Calculate target end time (dall'ora dell'adunanza se si e' partiti in ritardo)
+        inizio = getattr(self, '_inizio_programmato', None) or self._meeting_start_time
+        self._target_end_time = inizio + timedelta(minutes=target_minutes)
 
     def _update_predicted_end_time(self):
         """Update the predicted end time based on current progress and real-time data"""
@@ -617,8 +689,15 @@ class TimerController(QObject):
             return
         self._navigating_part = True
         try:
-            # Move to previous part
-            self.current_part_index -= 1
+            if self._in_transition:
+                # Nel minuto del presidente «Precedente» riporta alla parte appena
+                # finita (non due indietro) e annulla il passaggio: prima restava
+                # un passaggio fantasma e «Successivo» saltava una parte.
+                self._in_transition = False
+                self._next_part_after_transition = -1
+            else:
+                # Move to previous part
+                self.current_part_index -= 1
 
             # Check if we're at the beginning
             if self.current_part_index < 0:
@@ -647,6 +726,9 @@ class TimerController(QObject):
         self._in_transition = False
         self.timer.stop()
         self.current_part_index = -1
+        self._inizio_programmato = None
+        for part in self.parts_list:
+            part.riduzione_secondi = 0
         self.meeting_ended.emit()
 
         # End session tracking (clean exit)
@@ -834,6 +916,8 @@ class TimerController(QObject):
             return
         
         if 0 <= part_index < len(self.parts_list):
+            self._in_transition = False
+            self._next_part_after_transition = -1
             # Mark parts before this as completed
             for i in range(part_index):
                 self.parts_list[i].is_completed = True

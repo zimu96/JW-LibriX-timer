@@ -26,11 +26,14 @@ class MeetingPart:
     notes: str = ""
     is_completed: bool = False
     original_duration_minutes: Optional[int] = None  # Pre-adjustment duration (None = not adjusted)
+    # Secondi tolti a questa parte perche' l'adunanza e' iniziata in ritardo.
+    # Solo per l'adunanza in corso: non si salva sul file.
+    riduzione_secondi: int = 0
     
     @property
     def duration_seconds(self) -> int:
-        """Convert minutes to seconds"""
-        return self.duration_minutes * 60
+        """Durata in secondi (i minuti, meno i secondi tolti per il ritardo)"""
+        return max(0, self.duration_minutes * 60 - self.riduzione_secondi)
     
     def to_dict(self) -> dict:
         """Convert to dictionary for storage"""

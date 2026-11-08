@@ -1459,7 +1459,7 @@ def installa(finestra) -> PannelloContenuti:
     # Niente barra del titolo sopra il pannello: ripeterebbe il titolo che c'e'
     # gia' dentro e mangia spazio.  Si apre e si chiude dal tasto «Contenuti».
     dock.setTitleBarWidget(QWidget())
-    dock.setMinimumWidth(380)
+    dock.setMinimumWidth(250)      # a mezzo schermo deve starci (accanto a Zoom)
     dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetClosable
                      | QDockWidget.DockWidgetFeature.DockWidgetMovable)
     finestra.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)

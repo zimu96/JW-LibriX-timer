@@ -42,13 +42,9 @@ class ToastNotification(QWidget):
 
     def _setup_ui(self):
         """Setup the toast UI."""
-        flags = (Qt.WindowType.FramelessWindowHint
-                 | Qt.WindowType.Tool
-                 | Qt.WindowType.WindowStaysOnTopHint)
-        # On Windows, bypass the window manager to avoid taskbar flicker
-        if sys.platform == "win32":
-            flags |= Qt.WindowType.WindowDoesNotAcceptFocus
-        self.setWindowFlags(flags)
+        # Non e' una finestra a parte: vive DENTRO la finestra dell'app, cosi'
+        # sta sempre al centro dell'app (anche a mezzo schermo) e non finisce
+        # mai sotto un'altra finestra (Zoom).
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
@@ -215,20 +211,17 @@ class ToastNotification(QWidget):
             self.icon_label.setVisible(False)
 
     def _position_toast(self):
-        """Position the toast at the bottom-right of the parent window."""
-        if not self.parent():
-            return
-
+        """Mette il messaggio al centro della finestra dell'app."""
         parent = self.parent()
-        # Map the parent's bottom-right corner to global screen coordinates.
-        # This is required because Tool windows use screen-level positioning.
-        parent_bottom_right = parent.mapToGlobal(
-            QPoint(parent.rect().width(), parent.rect().height())
-        )
-
-        x = parent_bottom_right.x() - self.width() - _MARGIN
-        y = parent_bottom_right.y() - self.height() - _MARGIN
-
+        if not parent:
+            return
+        # centro della finestra dell'app (non dello schermo), nelle coordinate del genitore
+        finestra = parent.window()
+        centro = parent.mapFromGlobal(finestra.mapToGlobal(finestra.rect().center()))
+        x = centro.x() - self.width() // 2
+        y = centro.y() - self.height() // 2
+        x = max(_MARGIN, min(x, parent.width() - self.width() - _MARGIN))
+        y = max(_MARGIN, min(y, parent.height() - self.height() - _MARGIN))
         self.move(x, y)
 
     def fade_out(self):
