@@ -23,7 +23,7 @@ from pathlib import Path
 import opzioni
 from PyQt6.QtCore import QEvent, QObject, QTimer, Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import (QCheckBox, QDockWidget, QFileDialog, QFrame, QHBoxLayout, QLabel,
+from PyQt6.QtWidgets import (QCheckBox, QDialog, QDockWidget, QFileDialog, QFrame, QHBoxLayout, QLabel,
                              QMenu, QMessageBox, QProgressBar, QPushButton, QScrollArea,
                              QToolButton, QVBoxLayout, QWidget)
 
@@ -859,6 +859,13 @@ class PannelloContenuti(QWidget):
         """
         meeting = self._meeting
         if meeting is None or self._pagina is not None:
+            return
+        # Mai due pop-up modali uno sopra l'altro (es. quello dei cantici): il
+        # secondo apre un secondo ciclo di eventi, il primo resta sotto e
+        # l'app sembra bloccata.  Se ce n'e' uno aperto, si riprova dopo.
+        if any(isinstance(d, QDialog) and d.isVisible()
+               for d in self._finestra.findChildren(QDialog)):
+            QTimer.singleShot(1000, self._proponi_la_nuova)
             return
         try:
             pub = pubblicazione_da_scaricare(meeting)
