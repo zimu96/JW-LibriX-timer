@@ -228,6 +228,8 @@ class ToastNotification(QWidget):
         """Start the fade out animation."""
         self.hide_timer.stop()
         self.fade_out_anim.start()
+        # in ogni caso sparisce: un avviso rimasto a mezz'aria non deve coprire i tasti
+        QTimer.singleShot(self.fade_out_anim.duration() + 400, self.hide)
 
     def _on_fade_out_finished(self):
         """Handle fade out completion."""
