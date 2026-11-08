@@ -40,7 +40,7 @@ Sostituisce la 1.0.0 (chi premeva «Aggiorna» scarica già questa).
   normalmente e il ritardo viene tolto, a pochi secondi per volta, dalle parti ancora da fare
   (mai da cantici e preghiere), così si finisce in orario. Un avviso dice quanto è stato tolto.
 - **Pop-up dentro l'app**: avvisi e domande stanno al centro della finestra dell'app, qualunque
-  sia la sua grandezza (anche a mezzo schermo), e non finiscono più sotto Zoom.
+  sia la sua grandezza (anche a mezzo schermo), e non finiscono più sotto altre finestre.
 - **Italiano**: «Sì / No / Annulla» al posto di Yes / No / Cancel, «Ritardo» nella barra in
   basso, editor delle adunanze e avvisi ancora in inglese.
 - **Precedente / Successivo**: nel minuto del presidente «Precedente» non fa più saltare una
@@ -49,7 +49,7 @@ Sostituisce la 1.0.0 (chi premeva «Aggiorna» scarica già questa).
   di prima, e contenuti e parti non coincidevano).
 - **A mezzo schermo**: le scritte sotto le cifre si rimpiccioliscono per starci intere; il
   pannello Contenuti, il titolo e la barra in basso non allargano più la finestra.
-- **Avviso «Pronti a cominciare?»**: era una finestra a parte che, a mezzo schermo accanto a Zoom, poteva coprire i tasti e bloccare «Inizia»; ora sta dentro l'app e sparisce sempre.
+- **Avviso «Pronti a cominciare?»**: era una finestra a parte che, a mezzo schermo poteva coprire i tasti e bloccare «Inizia»; ora sta dentro l'app e sparisce sempre.
 - Il monitor del timer torna da solo sullo schermo scelto (anche se lo schermo compare dopo).
 
 ### 1.0.0
