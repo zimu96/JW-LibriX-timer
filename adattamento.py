@@ -772,6 +772,9 @@ class _DialoghiSenzaBordi(QObject):
                 pass
         elif tipo == QEvent.Type.Show and isinstance(oggetto, QDialog) \
                 and oggetto.property("incorporato"):
+            # Ad ogni apertura (exec() la rimette ogni volta), prima che Qt lo
+            # mostri davvero: vedi `_non_modale`.
+            self._non_modale(oggetto)
             QTimer.singleShot(0, lambda d=oggetto: self._metti_al_centro(d))
             self._metti_al_centro(oggetto)
         elif tipo == QEvent.Type.Hide and isinstance(oggetto, QDialog) \
@@ -802,8 +805,30 @@ class _DialoghiSenzaBordi(QObject):
             return                      # troppo grande: resta una finestra a parte
         d.setParent(self._sede(), Qt.WindowType.Widget)     # da finestra a widget interno
         d.setProperty("incorporato", True)
+        self._non_modale(d)
         d.setAutoFillBackground(True)
         d.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+    @staticmethod
+    def _non_modale(d) -> None:
+        """Un pop-up DENTRO la finestra non deve essere «modale» per Qt.
+
+        Se nel timer c'e' un pezzo nativo (succede con lo schermo esterno dei
+        video e il monitor accesi), anche il pop-up diventa una finestra
+        nativa, figlia di quella dell'app.  exec() la segna «modale», Qt la
+        registra come LA finestra modale e blocca tutte le altre, compresa la
+        finestra dell'app che la contiene: ma i tasti del pop-up vivono
+        proprio li', e nessun clic arrivava piu'.  L'app sembrava bloccata e
+        andava chiusa a forza.  Il resto del timer lo ferma gia' il velo
+        (e `_spegni_il_resto`).
+
+        Si toglie la modalita' alla sola finestra nativa, se c'e' (quando non
+        c'e' il problema non esiste).  NON con `setWindowModality` sul pop-up:
+        un QMessageBox, cosi', torna a essere una finestra a parte.
+        """
+        finestra = d.windowHandle()
+        if finestra is not None and finestra.modality() != Qt.WindowModality.NonModal:
+            finestra.setModality(Qt.WindowModality.NonModal)
 
     def _metti_al_centro(self, d) -> None:
         f = self._sede()
@@ -846,6 +871,8 @@ class _DialoghiSenzaBordi(QObject):
                     aperti.append(d)
             except RuntimeError:
                 pass
+        if aperti:
+            self._spegni_il_resto(True)
         for i, d in enumerate(aperti):
             try:
                 self._veli[d].raise_()
@@ -892,8 +919,32 @@ class _DialoghiSenzaBordi(QObject):
         if self._veli:
             self._riordina()             # tocca a quello sotto: torna attivo
         else:
+            self._spegni_il_resto(False)
             for sep in self._finestra.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
                 sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+
+    def _spegni_il_resto(self, spegni: bool) -> None:
+        """Finche' c'e' un pop-up aperto, il resto del timer non si tocca.
+
+        Di solito basta il velo.  Ma se i pezzi del timer sono nativi (vedi
+        `_non_modale`) stanno SOPRA al velo, che non si vede e non ferma i
+        clic: si poteva premere «Inizia adunanza» col pop-up aperto.  Spenti,
+        non rispondono in nessun caso.  Si riaccendono solo quelli spenti qui.
+        """
+        for w in self._sede().findChildren(
+                QWidget, options=Qt.FindChildOption.FindDirectChildrenOnly):
+            if isinstance(w, (_Velo, QDialog)):
+                continue
+            try:
+                if spegni:
+                    if w.isEnabled() and not w.property("spento_dal_popup"):
+                        w.setProperty("spento_dal_popup", True)
+                        w.setEnabled(False)
+                elif w.property("spento_dal_popup"):
+                    w.setProperty("spento_dal_popup", False)
+                    w.setEnabled(True)
+            except RuntimeError:
+                pass
 
     @staticmethod
     def _prepara(d) -> None:
