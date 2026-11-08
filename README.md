@@ -37,12 +37,22 @@ dentro la cartella dei dati di JW-LibriX.
 
 ## Versioni
 
-Le versioni sono i tag `vX.Y.Z`; l'app scarica lo zip del tag `v1.0.0` (indirizzo
-fisso nell'app). Per questo il tag `v1.0.0` punta sempre al codice più recente.
+Si scarica solo l'ultima versione: oggi la **1.0.5**. JW-LibriX (dalla 1.0.2)
+installa e aggiorna sempre l'ultima; le app più vecchie chiedono il tag `v1.0.0`,
+che per questo punta sempre al codice più recente.
 
-### 1.0.3 — correzioni
+### 1.0.5 — l'ultima
 
-Sostituisce la 1.0.0, la 1.0.1 e la 1.0.2.
+Sostituisce tutte le precedenti.
+
+- **Pop-up**: rispondono sempre e arrivano uno alla volta, nell'ordine giusto; l'app non si
+  blocca più, anche con lo schermo esterno dei video acceso.
+- **Avvio dell'app**: il monitor del timer non ferma più la schermata di avvio.
+- **A metà schermo**: il titolo va a capo, la scaletta lascia lo spazio ai titoli (il titolo
+  intero passando col mouse), «Contenuti» e «Aggiungi file» scendono nella seconda riga quando
+  non ci stanno. A schermo intero resta tutto come prima.
+
+### 1.0.3 – 1.0.4
 
 - **Partenza in ritardo**: se l'adunanza inizia dopo l'ora fissata il tasto «Inizia» funziona
   normalmente e il ritardo viene tolto, a pochi secondi per volta, dalle parti ancora da fare
@@ -61,18 +71,11 @@ Sostituisce la 1.0.0, la 1.0.1 e la 1.0.2.
 - **Pop-up «Modifica i cantici»**: il tasto OK ora risponde sempre (prima un separatore invisibile tra i pannelli prendeva i clic).
 - **Cantici del fine settimana**: dopo aver inserito i numeri dei cantici la schermata del timer non si sposta più fuori posto e i tasti restano utilizzabili.
 - Il monitor del timer torna da solo sullo schermo scelto (anche se lo schermo compare dopo).
+- Aprendo il timer non compaiono più due pop-up uno sopra l'altro.
 
-### 1.0.2
+### 1.0.0 – 1.0.2
 
-Sistemava lo spostamento della schermata dopo i cantici (sostituita dalla 1.0.3).
-
-### 1.0.1
-
-Prima serie di correzioni (sostituita dalla 1.0.2).
-
-### 1.0.0
-
-Prima versione.
+Prima versione e prime correzioni.
 
 ## Licenza
 
