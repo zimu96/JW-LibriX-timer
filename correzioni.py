@@ -117,9 +117,9 @@ def _font_con(etichetta: QLabel, px: int) -> QFont:
 
 def _adatta_titoli(vista) -> None:
     try:
-        larg = max(1, vista.width())
-        _adatta_scritta(vista.part_label, max(14, min(30, larg // 16)), 11, 3)
-        _adatta_scritta(vista.countdown_label, max(12, min(24, larg // 20)), 10, 3)
+        # grandezza di prima (18 e 16 px): si rimpiccioliscono solo se non ci stanno
+        _adatta_scritta(vista.part_label, 18, 11, 3)
+        _adatta_scritta(vista.countdown_label, 16, 10, 3)
     except RuntimeError:
         pass          # il widget non c'e' piu'
 
@@ -128,9 +128,11 @@ def _adatta_titoli(vista) -> None:
 # il monitor torna da solo sullo schermo scelto
 # ----------------------------------------------------------------------
 def _controlla_monitor(finestra) -> None:
-    """Se il monitor del timer dovrebbe esserci e non c'e' (schermo comparso dopo,
-    app riaperta), lo rimette."""
+    """Se il monitor del timer dovrebbe esserci e non c'e' (schermo comparso dopo
+    l'avvio), lo rimette.  Mai mentre l'app si sta chiudendo o riavviando."""
     try:
+        if getattr(finestra, "_in_chiusura", False) or QApplication.closingDown():
+            return
         d = finestra.settings_controller.get_settings().display
         if not d.use_secondary_screen or not d.secondary_screen_name:
             return
@@ -142,8 +144,6 @@ def _controlla_monitor(finestra) -> None:
         if mon is None:
             finestra._ensure_single_secondary_display()
             finestra._update_secondary_display_label()
-        elif hasattr(mon, "show_on_configured_screen_safely") and not mon.isVisible():
-            mon.show_on_configured_screen_safely()
     except (RuntimeError, AttributeError):
         pass
 
@@ -164,8 +164,7 @@ def applica() -> None:
         originale_tv(self, *a, **k)
         # le scritte non decidono la larghezza della finestra
         for et in (self.part_label, self.countdown_label):
-            et.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-            et.setMinimumWidth(0)
+            et.setMinimumWidth(1)
         self.timer_label.setMinimumWidth(1)       # le cifre si rimpiccioliscono, non allargano
         self.timer_panel.setMinimumWidth(1)
         controllo = QTimer(self)
@@ -193,9 +192,7 @@ def applica() -> None:
         originale_mv(self, *a, **k)
         etichetta = getattr(self, "title_label", None)
         if etichetta is not None:
-            etichetta.setWordWrap(True)
-            etichetta.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Minimum)
-            etichetta.setMinimumWidth(0)
+            etichetta.setMinimumWidth(1)      # a mezzo schermo si taglia a destra, non allarga
 
     mv.MeetingView.__init__ = mv_init
 
@@ -225,12 +222,24 @@ def applica() -> None:
         c.meeting_ended.connect(lambda: ferma_pulsazioni(self))
         c.timer.state_changed.connect(lambda stato: _stato_cambiato(self, stato))
         c.late_start_absorbed.connect(lambda r, t: _avviso_ritardo(self, r, t))
-        # monitor: ricontrollo ogni tanto e quando compare uno schermo nuovo
+        # monitor: solo all'avvio (lo schermo puo' comparire dopo) e quando compare
+        # uno schermo nuovo; mai in chiusura.
+        self._in_chiusura = False
+        QApplication.instance().aboutToQuit.connect(lambda: setattr(self, "_in_chiusura", True))
         giro = QTimer(self)
         giro.timeout.connect(lambda: _controlla_monitor(self))
         giro.start(4000)
+        QTimer.singleShot(60000, giro.stop)
         self._giro_monitor = giro
         QApplication.instance().screenAdded.connect(
             lambda *_: QTimer.singleShot(1500, lambda: _controlla_monitor(self)))
 
     mw.MainWindow.__init__ = mw_init
+
+    chiusura_originale = mw.MainWindow.closeEvent
+
+    def chiusura(self, evento):
+        self._in_chiusura = True
+        chiusura_originale(self, evento)
+
+    mw.MainWindow.closeEvent = chiusura

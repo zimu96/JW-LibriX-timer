@@ -728,6 +728,25 @@ class _DialoghiSenzaBordi(QObject):
         super().__init__(finestra)
         self._finestra = finestra
         self._veli: dict = {}
+        # Un velo non deve mai restare: se il pop-up non c'e' piu', via anche lui.
+        self._guardia = QTimer(self)
+        self._guardia.timeout.connect(self._pulisci_veli)
+        self._guardia.start(500)
+
+    def _pulisci_veli(self) -> None:
+        for d in list(self._veli):
+            try:
+                vivo = d.isVisible() and d.parentWidget() is self._finestra
+            except RuntimeError:
+                vivo = False
+            if not vivo:
+                velo = self._veli.pop(d, None)
+                if velo is not None:
+                    try:
+                        velo.hide()
+                        velo.deleteLater()
+                    except RuntimeError:
+                        pass
 
     def _del_timer(self, w) -> bool:
         p = w.parentWidget()
