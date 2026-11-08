@@ -327,8 +327,22 @@ class MonitorTimer(QWidget):
         if self.windowHandle() is not None:
             self.windowHandle().setScreen(schermo)
         self.setGeometry(schermo.geometry())
-        self.showFullScreen()
+        self.schermo_intero()
         QTimer.singleShot(250, self._rimetti)
+
+    def schermo_intero(self) -> None:
+        """Come `showFullScreen()`, ma senza chiedere il fuoco.
+
+        `showFullScreen()` alla fine chiede anche di attivare la finestra, e
+        questa il fuoco non lo prende di proposito (`WindowDoesNotAcceptFocus`):
+        Qt allora scrive l'avviso «requestActivate() called for ...».  Se capita
+        mentre la schermata di avvio dell'app sta ancora lavorando, la schermata
+        si ferma su «messaggi con problemi» e aspetta «Ignora e parti».
+        """
+        stato = self.windowState() & ~(Qt.WindowState.WindowMinimized
+                                       | Qt.WindowState.WindowMaximized)
+        self.setWindowState(stato | Qt.WindowState.WindowFullScreen)
+        self.setVisible(True)
 
     def _rimetti(self) -> None:
         """Dopo showFullScreen Qt puo' rimettere lo schermo di prima."""
@@ -339,7 +353,7 @@ class MonitorTimer(QWidget):
             if self.windowHandle() is not None and self.windowHandle().screen() is not s:
                 self.windowHandle().setScreen(s)
                 self.setGeometry(s.geometry())
-                self.showFullScreen()
+                self.schermo_intero()
         except RuntimeError:
             pass
 

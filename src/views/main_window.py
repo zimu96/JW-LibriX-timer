@@ -474,7 +474,13 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(2000, self._start_screen_monitoring)
         else:
             # If it exists, just reposition safely
-            self.secondary_display.show_on_configured_screen_safely()
+            try:
+                self.secondary_display.show_on_configured_screen_safely()
+            except RuntimeError:
+                # Il monitor e' stato chiuso mentre questa chiamata aspettava
+                # (arriva in ritardo): non c'e' niente da rimettere.
+                self.secondary_display = None
+                return None
         
         return self.secondary_display
     
@@ -2314,7 +2320,12 @@ class MainWindow(QMainWindow):
         self.raise_()
         
         # Ensure secondary stays on top without stealing focus
-        if hasattr(self, 'secondary_display') and self.secondary_display and self.secondary_display.isVisible():
+        try:
+            visibile = bool(getattr(self, 'secondary_display', None)
+                            and self.secondary_display.isVisible())
+        except RuntimeError:            # monitor chiuso nel frattempo
+            visibile = False
+        if visibile:
             # Return focus to main window after brief delay
             QTimer.singleShot(100, lambda: self.activateWindow())
     
@@ -2811,9 +2822,22 @@ class MainWindow(QMainWindow):
         geometry = screen.geometry()
         self.secondary_display.setGeometry(geometry)
         self.secondary_display.show()
-        QTimer.singleShot(200, lambda: self.secondary_display.showFullScreen())
+        QTimer.singleShot(200, self._secondary_a_schermo_intero)
         #print(f"[FIXED] Moved secondary display to screen: {screen.name()}")
     # The following methods were used for lazy-loading and are now removed:
+    def _secondary_a_schermo_intero(self):
+        """Il monitor a schermo intero, senza chiedergli il fuoco (vedi `schermo_intero`)."""
+        try:
+            monitor = self.secondary_display
+            if monitor is None:
+                return
+            if hasattr(monitor, "schermo_intero"):
+                monitor.schermo_intero()
+            else:
+                monitor.showFullScreen()
+        except RuntimeError:            # monitor chiuso nel frattempo
+            pass
+
     def show_attention_indicator(self):
         """Change tray icon to show a red badge or indicator"""
         from PyQt6.QtGui import QPixmap, QPainter, QColor
