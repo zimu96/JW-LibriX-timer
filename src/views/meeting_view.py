@@ -199,9 +199,10 @@ class MeetingView(QWidget):
         
         self.title_label = QLabel(self.tr("No Meeting Selected"))
         self.title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
-        header_layout.addWidget(self.title_label)
-        
-        header_layout.addStretch()
+        # A meta' schermo il titolo e' piu' largo della colonna: va a capo
+        # invece di tagliarsi.
+        self.title_label.setWordWrap(True)
+        header_layout.addWidget(self.title_label, 1)
         
         # Add header layout
         layout.addLayout(header_layout)
@@ -209,9 +210,9 @@ class MeetingView(QWidget):
         # Parts tree
         self.parts_tree = QTreeWidget()
         self.parts_tree.setHeaderLabels([self.tr("Title"), self.tr("Duration"), self.tr("Status")])
-        self.parts_tree.setColumnWidth(0, 400)  # Set width for title column
-        self.parts_tree.setColumnWidth(1, 100)  # Set width for duration column
         self.parts_tree.setAlternatingRowColors(True)
+        # Titoli lunghi su due righe, non tagliati (a meta' schermo la colonna e' stretta)
+        self.parts_tree.setWordWrap(True)
         self.parts_tree.setIndentation(20)
         
         # Connect double-click to jump to part
@@ -223,9 +224,11 @@ class MeetingView(QWidget):
         
         # Set header properties
         header = self.parts_tree.header()
+        # Durata e Stato larghe quanto serve, tutto il resto ai titoli.
+        header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         
         # Add to layout
         layout.addWidget(self.parts_tree)
@@ -261,6 +264,7 @@ class MeetingView(QWidget):
             # Create section item
             section_item = QTreeWidgetItem(self.parts_tree)
             section_item.setText(0, section.title)
+            section_item.setToolTip(0, section.title)
             section_item.setText(1, f"{section.total_duration_minutes} min")
             section_item.setData(0, Qt.ItemDataRole.UserRole, ("section", section_index))
             
@@ -286,10 +290,11 @@ class MeetingView(QWidget):
                 # check if songs are part of the meeting
                 is_song_part = "song" in part.title.lower()
                 part_item.setText(0, part.title)
+                part_item.setToolTip(0, part.title)
                 # Show adjusted duration with visual feedback
                 if (part.original_duration_minutes is not None and
                         part.original_duration_minutes != part.duration_minutes):
-                    part_item.setText(1, f"{part.duration_minutes} min (was {part.original_duration_minutes})")
+                    part_item.setText(1, f"{part.duration_minutes} min (era {part.original_duration_minutes})")
                     part_item.setForeground(1, QBrush(QColor(255, 152, 0)))  # Orange
                     diff = part.duration_minutes - part.original_duration_minutes
                     direction = self.tr("added") if diff > 0 else self.tr("removed")

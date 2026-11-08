@@ -1040,7 +1040,8 @@ class MainWindow(QMainWindow):
         tool_bar.addSeparator()
         
         # Time adjustment
-        self.decrease_button = QPushButton(self.tr("-1 Minute"))
+        # la traduzione diceva «-1 minuti»
+        self.decrease_button = QPushButton(self.tr("-1 Minute").replace("-1 minuti", "-1 minuto"))
         self.decrease_button.setIcon(get_icon("decrease"))
         self.decrease_button.setIconSize(QSize(24, 24))
         self.decrease_button.clicked.connect(lambda: self._adjust_time(-1))

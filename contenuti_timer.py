@@ -1462,6 +1462,10 @@ def installa(finestra) -> PannelloContenuti:
     # gia' dentro e mangia spazio.  Si apre e si chiude dal tasto «Contenuti».
     dock.setTitleBarWidget(QWidget())
     dock.setMinimumWidth(250)      # a mezzo schermo deve starci (accanto a Zoom)
+    # Quando la finestra si stringe e' il pannello a cedere, non l'orologio e
+    # la scaletta: sotto questa larghezza non si leggerebbero piu'.
+    if finestra.centralWidget() is not None:
+        finestra.centralWidget().setMinimumWidth(320)
     dock.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetClosable
                      | QDockWidget.DockWidgetFeature.DockWidgetMovable)
     finestra.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)

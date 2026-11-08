@@ -404,7 +404,10 @@ def _barra_che_basta(finestra) -> None:
              and barra.widgetForAction(a) not in nomi
              and not (isinstance(barra.widgetForAction(a), QPushButton)
                       and barra.widgetForAction(a).text() in ("Contenuti", "Aggiungi file"))]
-    resto_vis = [a for a in resto if a.isVisible()]
+    # Contenuti e Aggiungi file: nella prima riga finche' ci stanno, poi scendono.
+    extra = [a for a in barra.actions()
+             if isinstance(barra.widgetForAction(a), QPushButton)
+             and barra.widgetForAction(a).text() in ("Contenuti", "Aggiungi file")]
     seconda = QToolBar("Adunanza", finestra)
     seconda.setMovable(False)
     seconda.setIconSize(barra.iconSize())
@@ -441,27 +444,59 @@ def _barra_che_basta(finestra) -> None:
                     n += w.sizeHint().width() + 6
             return n
 
-        fissi = [a for a in barra.actions() if a not in resto]
-        base = 40 + larghezza(fissi, True)
+        fissi = [a for a in barra.actions() if a not in resto and a not in extra]
+        extra_giu = False
+
+        def base_ora() -> int:
+            return 40 + larghezza(fissi, True) + (0 if extra_giu else larghezza(extra, True))
+
+        base = base_ora()
         una_riga = base + larghezza(resto, True) <= barra.width()
-        # Se non basta, perdono il testo prima Precedente/Successivo, poi Inizia/Pausa;
-        # -1 e +1 minuto restano sempre scritti: con la sola icona si confondono.
-        for w in (finestra.prev_button, finestra.next_button,
+        # Se non basta, perdono il testo prima Precedente/Successivo, poi
+        # Contenuti e Aggiungi file scendono nella seconda riga, poi Inizia/Pausa
+        # perdono il testo.  -1 e +1 minuto restano sempre scritti: con la sola
+        # icona si confondono.
+        for w in (finestra.prev_button, finestra.next_button, "giu",
                   finestra.start_button, finestra.pause_resume_button):
             if base <= barra.width():
                 break
-            senza.add(w)
-            base = 40 + larghezza(fissi, True)
+            if w == "giu":
+                extra_giu = True
+            else:
+                senza.add(w)
+            base = base_ora()
 
         # Una riga se ci sta tutto, altrimenti i tasti secondari scendono in una seconda.
-        dove = barra if una_riga else seconda
-        if resto and dove.actions()[-len(resto):] != resto:
-            for a in resto:
+        su = ([] if extra_giu else extra) + (resto if una_riga else [])
+        giu = ([] if una_riga else resto) + (extra if extra_giu else [])
+        mobili = set(extra) | set(resto)
+        if ([a for a in barra.actions() if a in mobili] != su
+                or [a for a in seconda.actions() if a in mobili] != giu):
+            for a in extra + resto:
                 barra.removeAction(a)
                 seconda.removeAction(a)
-            for a in resto:
-                dove.addAction(a)
-        seconda.setVisible(not una_riga)
+            for a in su:
+                barra.addAction(a)
+            for a in giu:
+                seconda.addAction(a)
+        seconda.setVisible(bool(giu))
+
+        # La scelta dell'adunanza ha un titolo lungo: sulla seconda riga, se la
+        # finestra e' stretta (meta' schermo di un monitor piccolo), si accorcia
+        # con «…» invece di spingere «Rete» fuori dalla finestra.
+        scelta = getattr(finestra, "meeting_selector", None)
+        if scelta is not None:
+            if una_riga:
+                limite = 16777215
+            else:
+                altri = 0
+                for a in giu:
+                    w = seconda.widgetForAction(a)
+                    if a.isVisible() and w is not None and w is not scelta:
+                        altri += w.sizeHint().width() + 6
+                limite = max(160, finestra.width() - altri - 40)
+            if scelta.maximumWidth() != limite:
+                scelta.setMaximumWidth(limite)
 
         for w in icone:
             pieno = w.property("pieno") or ""
