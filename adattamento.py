@@ -736,7 +736,7 @@ class _DialoghiSenzaBordi(QObject):
     def _pulisci_veli(self) -> None:
         for d in list(self._veli):
             try:
-                vivo = d.isVisible() and d.parentWidget() is self._finestra
+                vivo = d.isVisible() and d.parentWidget() is self._sede()
             except RuntimeError:
                 vivo = False
             if not vivo:
@@ -747,6 +747,13 @@ class _DialoghiSenzaBordi(QObject):
                         velo.deleteLater()
                     except RuntimeError:
                         pass
+        if not self._veli:
+            for sep in self._finestra.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
+                sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+
+    def _sede(self):
+        """Dove stanno pop-up e velo: la finestra del timer (da li' prendono lo stile)."""
+        return self._finestra
 
     def _del_timer(self, w) -> bool:
         p = w.parentWidget()
@@ -777,7 +784,7 @@ class _DialoghiSenzaBordi(QObject):
                 and oggetto.property("incorporato"):
             self._togli_velo(oggetto)
         elif tipo == QEvent.Type.Resize and isinstance(oggetto, QWidget) \
-                and oggetto is self._finestra and self._veli:
+                and oggetto is self._sede() and self._veli:
             for d in list(self._veli):
                 try:
                     self._metti_al_centro(d)
@@ -797,17 +804,23 @@ class _DialoghiSenzaBordi(QObject):
         if (minimo.width() > massimo.width() - 24 or minimo.height() > massimo.height() - 24
                 or d.layout() is None):
             return                      # troppo grande: resta una finestra a parte
-        d.setParent(f, Qt.WindowType.Widget)     # da finestra a widget interno
+        d.setParent(self._sede(), Qt.WindowType.Widget)     # da finestra a widget interno
         d.setProperty("incorporato", True)
         d.setAutoFillBackground(True)
         d.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
     def _metti_al_centro(self, d) -> None:
-        f = self._finestra
+        f = self._sede()
         if not d.isVisible() or d.parentWidget() is not f:
             return
         self._velo_per(d).setGeometry(f.rect())
         self._velo_per(d).raise_()
+        # I clic sul resto li ferma il velo.  La modalita' di Qt, con un pop-up che
+        # e' un widget interno e non una finestra, a volte lascia i tasti inerti.
+        # I separatori fra i pannelli stanno sopra a tutto e rubano i clic ai tasti.
+        for sep in f.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
+            sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+            sep.lower()
         m = 12
         larg = min(max(d.sizeHint().width(), d.minimumSizeHint().width(), d.width()),
                    f.width() - 2 * m)
@@ -815,8 +828,7 @@ class _DialoghiSenzaBordi(QObject):
                   f.height() - 2 * m)
         if (d.width(), d.height()) != (larg, alt):
             d.resize(larg, alt)
-        finestra_app = f.window()
-        centro = f.mapFromGlobal(finestra_app.mapToGlobal(finestra_app.rect().center()))
+        centro = f.rect().center()
         x = max(m, min(centro.x() - d.width() // 2, f.width() - d.width() - m))
         y = max(m, min(centro.y() - d.height() // 2, f.height() - d.height() - m))
         d.move(x, y)
@@ -828,7 +840,7 @@ class _DialoghiSenzaBordi(QObject):
     def _velo_per(self, d):
         velo = self._veli.get(d)
         if velo is None:
-            velo = _Velo(self._finestra)
+            velo = _Velo(self._sede())
             self._veli[d] = velo
             velo.show()
             velo.raise_()
@@ -839,6 +851,9 @@ class _DialoghiSenzaBordi(QObject):
         if velo is not None:
             velo.hide()
             velo.deleteLater()
+        if not self._veli:
+            for sep in self._finestra.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
+                sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 
     @staticmethod
     def _prepara(d) -> None:
