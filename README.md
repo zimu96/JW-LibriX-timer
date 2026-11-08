@@ -7,7 +7,7 @@ Basato su OnTime Meeting Timer 1.0.9 (MIT), adattato a JW-LibriX.
 
 ## Com'è
 
-![Timer adunanze dentro JW-LibriX](docs/immagini/timer.png)
+![Timer adunanze dentro JW-LibriX](docs/immagini/timer-schermo-intero.png)
 
 A metà schermo, con Zoom accanto (com'è pensato per l'adunanza):
 
