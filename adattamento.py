@@ -736,20 +736,14 @@ class _DialoghiSenzaBordi(QObject):
     def _pulisci_veli(self) -> None:
         for d in list(self._veli):
             try:
-                vivo = d.isVisible() and d.parentWidget() is self._sede()
+                # «Non nascosto», non «visibile»: se l'utente e' passato a un'altra
+                # sezione il pop-up non si vede ma e' ancora aperto, e il suo velo
+                # deve restare (senza, tornando al timer il resto si poteva cliccare).
+                vivo = not d.isHidden() and d.parentWidget() is self._sede()
             except RuntimeError:
                 vivo = False
             if not vivo:
-                velo = self._veli.pop(d, None)
-                if velo is not None:
-                    try:
-                        velo.hide()
-                        velo.deleteLater()
-                    except RuntimeError:
-                        pass
-        if not self._veli:
-            for sep in self._finestra.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
-                sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+                self._togli_velo(d)
 
     def _sede(self):
         """Dove stanno pop-up e velo: la finestra del timer (da li' prendono lo stile)."""
@@ -781,7 +775,9 @@ class _DialoghiSenzaBordi(QObject):
             QTimer.singleShot(0, lambda d=oggetto: self._metti_al_centro(d))
             self._metti_al_centro(oggetto)
         elif tipo == QEvent.Type.Hide and isinstance(oggetto, QDialog) \
-                and oggetto.property("incorporato"):
+                and oggetto.property("incorporato") and oggetto.isHidden():
+            # Solo quando il pop-up si chiude davvero: se si nasconde perche'
+            # l'utente cambia sezione, il velo resta.
             self._togli_velo(oggetto)
         elif tipo == QEvent.Type.Resize and isinstance(oggetto, QWidget) \
                 and oggetto is self._sede() and self._veli:
@@ -814,7 +810,6 @@ class _DialoghiSenzaBordi(QObject):
         if not d.isVisible() or d.parentWidget() is not f:
             return
         self._velo_per(d).setGeometry(f.rect())
-        self._velo_per(d).raise_()
         # I clic sul resto li ferma il velo.  La modalita' di Qt, con un pop-up che
         # e' un widget interno e non una finestra, a volte lascia i tasti inerti.
         # I separatori fra i pannelli stanno sopra a tutto e rubano i clic ai tasti.
@@ -832,10 +827,43 @@ class _DialoghiSenzaBordi(QObject):
         x = max(m, min(centro.x() - d.width() // 2, f.width() - d.width() - m))
         y = max(m, min(centro.y() - d.height() // 2, f.height() - d.height() - m))
         d.move(x, y)
-        d.raise_()
-        if not d.property("fuoco_dato"):
-            d.setProperty("fuoco_dato", True)
-            d.setFocus(Qt.FocusReason.PopupFocusReason)    # Invio / Esc funzionano subito
+        self._riordina()
+
+    def _riordina(self) -> None:
+        """Il pop-up aperto per ULTIMO sta sopra a tutti ed e' l'unico che si tocca.
+
+        I pop-up si chiudono al contrario di come si aprono: quello aperto dopo
+        gira dentro quello aperto prima, e finche' non si chiude lui il primo
+        non puo' andare avanti.  Se il primo tornava sopra (ad esempio dopo un
+        ridimensionamento), si cliccava il suo OK, spariva, ma non succedeva
+        niente: e l'altro restava nascosto sotto.  Quelli sotto restano
+        spenti finche' tocca a loro.
+        """
+        aperti = []
+        for d in list(self._veli):
+            try:
+                if not d.isHidden() and d.parentWidget() is self._sede():
+                    aperti.append(d)
+            except RuntimeError:
+                pass
+        for i, d in enumerate(aperti):
+            try:
+                self._veli[d].raise_()
+                d.raise_()
+                if i < len(aperti) - 1:
+                    if d.isEnabled():
+                        d.setEnabled(False)
+                        d.setProperty("spento_in_coda", True)
+                    continue
+                if d.property("spento_in_coda"):
+                    d.setProperty("spento_in_coda", False)
+                    d.setEnabled(True)
+                    d.setProperty("fuoco_dato", False)
+                if d.isVisible() and not d.property("fuoco_dato"):
+                    d.setProperty("fuoco_dato", True)
+                    d.setFocus(Qt.FocusReason.PopupFocusReason)    # Invio / Esc funzionano subito
+            except RuntimeError:
+                pass
 
     def _velo_per(self, d):
         velo = self._veli.get(d)
@@ -849,9 +877,21 @@ class _DialoghiSenzaBordi(QObject):
     def _togli_velo(self, d) -> None:
         velo = self._veli.pop(d, None)
         if velo is not None:
-            velo.hide()
-            velo.deleteLater()
-        if not self._veli:
+            try:
+                velo.hide()
+                velo.deleteLater()
+            except RuntimeError:
+                pass
+        try:
+            if d.property("spento_in_coda"):     # chiuso mentre era in coda: si riapre acceso
+                d.setProperty("spento_in_coda", False)
+                d.setEnabled(True)
+            d.setProperty("fuoco_dato", False)
+        except RuntimeError:
+            pass
+        if self._veli:
+            self._riordina()             # tocca a quello sotto: torna attivo
+        else:
             for sep in self._finestra.findChildren(QWidget, "qt_qmainwindow_extended_splitter"):
                 sep.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 

@@ -40,6 +40,25 @@ from src.utils.update_checker import check_for_updates
 logger = logging.getLogger("OnTime.MainWindow")
 
 
+def popup_aperto() -> bool:
+    """True se c'e' un pop-up aperto, del timer o di JW LibriX.
+
+    Conta anche quelli del timer messi DENTRO la sezione (proprieta'
+    «incorporato»): non sono finestre, e se l'utente e' passato a un'altra
+    sezione non si vedono, ma sono ancora aperti e aspettano una risposta.
+    """
+    app = QApplication.instance()
+    if app is None:
+        return False
+    if app.activeModalWidget() is not None:
+        return True
+    for w in app.allWidgets():
+        if isinstance(w, QDialog) and (
+                w.isVisible() or (w.property("incorporato") and not w.isHidden())):
+            return True
+    return False
+
+
 class UpdateCheckWorker(QObject):
     """Worker class for running update checks in a separate thread"""
     finished = pyqtSignal()
@@ -781,13 +800,27 @@ class MainWindow(QMainWindow):
         Il timer si costruisce all'avvio dell'app (per il monitor), ma l'utente
         puo' essere in un'altra sezione: avvisi e domande non devono saltare
         fuori li'.  Se non e' visibile, si aspetta la prima volta che lo e'.
+
+        E un pop-up alla volta: se ce n'e' gia' uno aperto (del timer o
+        dell'app) si aspetta che venga chiuso.  Due pop-up uno sopra l'altro
+        bloccavano l'app (il secondo apre un altro ciclo di eventi e il primo,
+        anche se si chiude, non va avanti finche' non si chiude il secondo).
         """
         if self.isVisible():
-            QTimer.singleShot(ritardo_ms, funzione)
+            QTimer.singleShot(ritardo_ms, lambda: self._al_suo_turno(funzione))
         else:
             if not hasattr(self, "_in_attesa_di_vista"):
                 self._in_attesa_di_vista = []
             self._in_attesa_di_vista.append((funzione, ritardo_ms))
+
+    def _al_suo_turno(self, funzione):
+        """Esegue `funzione` quando il timer si vede e nessun pop-up e' aperto."""
+        if not self.isVisible():
+            self.esegui_quando_visibile(funzione, 300)      # torna ad aspettare la vista
+        elif popup_aperto():
+            QTimer.singleShot(700, lambda: self._al_suo_turno(funzione))
+        else:
+            funzione()
 
     def showEvent(self, event):
         """Override show event to initialize screens when window is shown"""
@@ -795,7 +828,7 @@ class MainWindow(QMainWindow):
         in_attesa = getattr(self, "_in_attesa_di_vista", [])
         self._in_attesa_di_vista = []
         for funzione, ritardo in in_attesa:
-            QTimer.singleShot(ritardo, funzione)
+            QTimer.singleShot(ritardo, lambda f=funzione: self._al_suo_turno(f))
         
         # This is the right time to initialize screens, after the window is fully created
         # and about to become visible
@@ -2017,7 +2050,7 @@ class MainWindow(QMainWindow):
                         self.meeting_controller.settings_manager.settings.recent_meetings.append(file_path)
                         self.meeting_controller.settings_manager.save_settings()
             except Exception as e:
-                QTimer.singleShot(0, lambda: QMessageBox.critical(self, self.tr("Error"), self.tr(f"Failed to load meeting: {str(e)}")))
+                QTimer.singleShot(0, lambda e=e: QMessageBox.critical(self, self.tr("Error"), self.tr(f"Failed to load meeting: {str(e)}")))
 
     def _update_meetings(self):
         """Update meetings from web with enhanced weekend meeting handling"""
