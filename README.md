@@ -9,6 +9,14 @@ Basato su OnTime Meeting Timer 1.0.9 (MIT), adattato a JW-LibriX.
 
 ![Timer adunanze dentro JW-LibriX](docs/immagini/timer.png)
 
+A metà schermo, con Zoom accanto (com'è pensato per l'adunanza):
+
+![Il timer a metà schermo](docs/immagini/timer-meta-schermo.png)
+
+Quando mancano i numeri dei cantici del fine settimana, il timer li chiede:
+
+![Numeri dei cantici del fine settimana](docs/immagini/timer-cantici.png)
+
 ## Cosa fa
 
 - Conto alla rovescia delle parti dell'adunanza, con le durate prese dal programma.
