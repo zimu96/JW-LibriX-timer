@@ -32,9 +32,9 @@ dentro la cartella dei dati di JW-LibriX.
 Le versioni sono i tag `vX.Y.Z`; l'app scarica lo zip del tag `v1.0.0` (indirizzo
 fisso nell'app). Per questo il tag `v1.0.0` punta sempre al codice più recente.
 
-### 1.0.1 — correzioni
+### 1.0.2 — correzioni
 
-Sostituisce la 1.0.0 (chi premeva «Aggiorna» scarica già questa).
+Sostituisce la 1.0.0 e la 1.0.1.
 
 - **Partenza in ritardo**: se l'adunanza inizia dopo l'ora fissata il tasto «Inizia» funziona
   normalmente e il ritardo viene tolto, a pochi secondi per volta, dalle parti ancora da fare
@@ -50,7 +50,12 @@ Sostituisce la 1.0.0 (chi premeva «Aggiorna» scarica già questa).
 - **A mezzo schermo**: le scritte sotto le cifre si rimpiccioliscono per starci intere; il
   pannello Contenuti, il titolo e la barra in basso non allargano più la finestra.
 - **Avviso «Pronti a cominciare?»**: era una finestra a parte che, a mezzo schermo poteva coprire i tasti e bloccare «Inizia»; ora sta dentro l'app e sparisce sempre.
+- **Cantici del fine settimana**: dopo aver inserito i numeri dei cantici la schermata del timer non si sposta più fuori posto e i tasti restano utilizzabili.
 - Il monitor del timer torna da solo sullo schermo scelto (anche se lo schermo compare dopo).
+
+### 1.0.1
+
+Prima serie di correzioni (sostituita dalla 1.0.2).
 
 ### 1.0.0
 

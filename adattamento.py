@@ -924,6 +924,11 @@ def applica() -> None:
     mw.MainWindow._check_for_updates = lambda self, silent=False: None
     mw.MainWindow._start_screen_monitoring = lambda self: None
     mw.MainWindow._check_session_recovery = _scarta_sessione_interrotta
+    # Il timer e' una sezione dell'app, non una finestra: niente spostamenti e
+    # ridimensionamenti «da finestra» (dopo i cantici spostavano tutta la sezione
+    # fuori posto e non si riusciva piu' a toccare niente).
+    mw.MainWindow._force_normal_window_state = lambda self: None
+    mw.MainWindow._position_main_window = lambda self: None
 
     # «Successivo» passa subito alla parte dopo; il minuto del presidente
     # tra le parti e' un'opzione (spenta di partenza).
