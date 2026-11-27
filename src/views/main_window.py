@@ -2731,8 +2731,8 @@ class MainWindow(QMainWindow):
 
         # If mode is disabled but we know broadcast was active, use HTTP_ONLY as fallback
         if mode == NetworkDisplayMode.DISABLED:
-            logger.info("Mode is DISABLED but broadcast was active, using HTTP_ONLY as fallback")
-            mode = NetworkDisplayMode.HTTP_ONLY
+            logger.info("Mode is DISABLED but broadcast was active, using HTTP_AND_WS as fallback")
+            mode = NetworkDisplayMode.HTTP_AND_WS
 
         self.network_display_manager.start_network_display(mode, http_port, ws_port)
         self.toggle_network_action.setText(self.tr("Stop Network Display"))

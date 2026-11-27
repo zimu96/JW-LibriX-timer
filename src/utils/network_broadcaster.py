@@ -56,9 +56,15 @@ class NetworkBroadcaster(QObject):
         }
     
     def _get_local_ip(self) -> str:
-        """IP di questo computer nella rete locale (quello che il tablet raggiunge)."""
+        """IP di questo computer nella rete locale (quello che il tablet raggiunge).
+
+        Si ricalcola a ogni avvio: se l'app parte prima che la rete sia pronta
+        (Wi-Fi o cavo ancora da collegare) non resta fermo su 127.0.0.1.
+        Si preferiscono gli indirizzi di casa (192.168.x, 10.x, 172.16-31.x) e
+        si scartano quelli delle macchine virtuali (192.168.122.x di libvirt).
+        """
         candidati = []
-        for destinazione in (("8.8.8.8", 80), ("10.255.255.255", 1), ("192.168.255.255", 1)):
+        for destinazione in (("8.8.8.8", 80), ("192.168.255.255", 1), ("10.255.255.255", 1)):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                     s.connect(destinazione)       # nessun pacchetto parte davvero
@@ -69,8 +75,25 @@ class NetworkBroadcaster(QObject):
             candidati += socket.gethostbyname_ex(socket.gethostname())[2]
         except OSError:
             pass
+
+        def buono(ip: str) -> bool:
+            return bool(ip) and not ip.startswith(("127.", "169.254.", "192.168.122."))
+
+        def di_casa(ip: str) -> bool:
+            if ip.startswith(("192.168.", "10.")):
+                return True
+            if ip.startswith("172."):
+                try:
+                    return 16 <= int(ip.split(".")[1]) <= 31
+                except ValueError:
+                    return False
+            return False
+
         for ip in candidati:
-            if ip and not ip.startswith("127."):
+            if buono(ip) and di_casa(ip):
+                return ip
+        for ip in candidati:
+            if buono(ip):
                 return ip
         return "127.0.0.1"
 
@@ -160,6 +183,7 @@ class NetworkBroadcaster(QObject):
             ) as server:
                 self.server = server
                 self.is_broadcasting = True
+                self._pronto.set()
                 self.broadcast_started.emit(f"http://{self.host_ip}:{self.port}", self.port)
                 self._stop_future = asyncio.get_running_loop().create_future()
                 await self._stop_future
@@ -168,11 +192,15 @@ class NetworkBroadcaster(QObject):
             # Handle address already in use or other network errors
             error_msg = f"Failed to start WebSocket server: {str(e)}"
             print(error_msg)
+            self.ultimo_errore = ("porta" if getattr(e, "errno", None) == 98 else str(e))
+            self._pronto.set()
             self.error_occurred.emit(error_msg)
             self.is_broadcasting = False
         except Exception as e:
             error_msg = f"Error in WebSocket server: {str(e)}"
             print(error_msg)
+            self.ultimo_errore = str(e)
+            self._pronto.set()
             traceback.print_exc()
             self.error_occurred.emit(error_msg)
             self.is_broadcasting = False
@@ -190,6 +218,9 @@ class NetworkBroadcaster(QObject):
         
         # Reset stop event
         self._stop_event.clear()
+        self._pronto = threading.Event()
+        self.ultimo_errore = ""
+        self.host_ip = self._get_local_ip()
         
         # Create a new event loop in a separate thread
         self.event_loop = asyncio.new_event_loop()
@@ -210,17 +241,20 @@ class NetworkBroadcaster(QObject):
                 traceback.print_exc()
             finally:
                 print("WebSocket server thread finishing")
-                if self.event_loop.is_running():
-                    self.event_loop.stop()
-                    self.event_loop.close()
+                self._pronto.set()
+                loop = self.event_loop
+                if loop is not None and loop.is_running():
+                    loop.stop()
         
         # Start the server in a separate thread
         self.thread = threading.Thread(target=run_server, daemon=True)
         self.thread.start()
         print("WebSocket broadcaster thread started")
         
-        # Small delay to let the server start
-        time.sleep(0.5)
+        # Si aspetta che il server sia davvero in ascolto (o che fallisca), fino
+        # a 5 secondi: con l'app appena avviata 0,5 s a volte non bastavano e
+        # il timer diceva «non parte» anche se poi partiva.
+        self._pronto.wait(5)
     
     def stop_broadcasting(self):
         """Stop broadcasting timer data"""
@@ -309,6 +343,8 @@ class NetworkBroadcaster(QObject):
     
     def get_connection_url(self) -> str:
         """Get the URL clients can use to connect"""
+        if self.host_ip.startswith("127."):      # la rete e' arrivata dopo l'avvio
+            self.host_ip = self._get_local_ip()
         return f"http://{self.host_ip}:{self.port}"
 
     def get_client_count(self) -> int:

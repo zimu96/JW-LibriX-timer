@@ -37,13 +37,23 @@ dentro la cartella dei dati di JW-LibriX.
 
 ## Versioni
 
-Si scarica solo l'ultima versione: oggi la **1.0.5**. JW-LibriX (dalla 1.0.2)
+Si scarica solo l'ultima versione: oggi la **1.0.6**. JW-LibriX (dalla 1.0.2)
 installa e aggiorna sempre l'ultima; le app più vecchie chiedono il tag `v1.0.0`,
 che per questo punta sempre al codice più recente.
 
-### 1.0.5 — l'ultima
+### 1.0.6 — l'ultima (bugfix)
 
-Sostituisce tutte le precedenti.
+Sostituisce tutte le precedenti. Solo **bugfix** del monitor di rete (il timer visto da un
+telefono o da un altro PC), niente di nuovo da imparare:
+
+- **Parte sempre**: prima a volte diceva «non parte» anche se poi partiva (aspettava solo mezzo
+  secondo); ora aspetta che sia davvero pronto e, se non parte, dice il motivo vero.
+- **QR e indirizzo giusti**: l'indirizzo si ricalcola a ogni avvio, quindi è giusto anche se
+  l'app è partita prima che la rete fosse pronta (prima il QR poteva puntare a 127.0.0.1).
+
+Esce insieme a JW-LibriX 1.1.2, ma va bene anche con le versioni precedenti dell'app.
+
+### 1.0.5
 
 - **Pop-up**: rispondono sempre e arrivano uno alla volta, nell'ordine giusto; l'app non si
   blocca più, anche con lo schermo esterno dei video acceso.

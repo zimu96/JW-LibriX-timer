@@ -104,8 +104,20 @@ class FinestraRete(QDialog):
             ferma(self._finestra)
         else:
             if not avvia(self._finestra):
-                self._nota.setText("Non parte: la porta e' gia' usata da un altro programma. "
-                                   "Cambiala in Impostazioni > Network Display.")
+                gestore = _gestore(self._finestra, carica=False)
+                errore = getattr(getattr(gestore, "broadcaster", None), "ultimo_errore", "")
+                if gestore is None:
+                    testo = "Non parte: il modulo di rete del timer non si e' caricato. Riprova."
+                elif errore == "porta":
+                    testo = ("Non parte: la porta e' gia' usata da un altro programma "
+                             "(forse un'altra finestra del timer). Cambiala in Impostazioni > Network Display.")
+                else:
+                    testo = f"Non parte: {errore or 'errore sconosciuto'}"
+                self._indirizzo.setText("")          # cosi' aggiorna() rifa' il QR
+                self.aggiorna()
+                self._nota.setText(testo)
+                return
+            self._indirizzo.setText("")
         self.aggiorna()
 
     def _apri_porta(self) -> None:
